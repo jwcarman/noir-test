@@ -2,6 +2,7 @@ package org.jwcarman.noirtest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -46,7 +47,7 @@ class RomanNumeralsTest {
     for (int n = 1; n <= 3999; n++) {
       String roman = RomanNumerals.toRoman(n);
       assertEquals(n, RomanNumerals.fromRoman(roman));
-      assertEquals(true, seen.add(roman), roman);
+      assertTrue(seen.add(roman), roman);
     }
   }
 
@@ -59,6 +60,13 @@ class RomanNumeralsTest {
       })
   void fromRomanRejectsInvalidStrings(String numeral) {
     assertThrows(IllegalArgumentException.class, () -> RomanNumerals.fromRoman(numeral));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "MMMM", "IIII", "xiv"})
+  void fromRomanRejectionMessageNamesTheNumeral(String numeral) {
+    var e = assertThrows(IllegalArgumentException.class, () -> RomanNumerals.fromRoman(numeral));
+    assertEquals("Not a canonical Roman numeral: \"" + numeral + "\"", e.getMessage());
   }
 
   @Test

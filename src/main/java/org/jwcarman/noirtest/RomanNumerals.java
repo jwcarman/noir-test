@@ -63,8 +63,7 @@ public final class RomanNumerals {
   public static int fromRoman(String numeral) {
     Objects.requireNonNull(numeral, "numeral");
     int value = rawValue(numeral);
-    // toRoman rejects out-of-range values (such as 0 for "" or 4000 for "MMMM") itself.
-    if (!toRoman(value).equals(numeral)) {
+    if (value < MIN || value > MAX || !toRoman(value).equals(numeral)) {
       throw new IllegalArgumentException("Not a canonical Roman numeral: \"" + numeral + "\"");
     }
     return value;
