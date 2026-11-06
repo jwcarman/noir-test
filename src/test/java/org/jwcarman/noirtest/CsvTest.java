@@ -110,16 +110,38 @@ class CsvTest {
         "\"a\" ",
         "\"a\"\"\"x",
         " \"a\"",
-        "a\rb",
-        "a\r",
-        "\r",
-        "\"a\"\r",
-        "\"a\"\rb",
-        "a\n\rb",
         "x\nb\"c"
       })
   void rejectsMalformedText(String text) {
     assertThrows(IllegalArgumentException.class, () -> Csv.parse(text));
+  }
+
+  @Test
+  void loneCarriageReturnSeparatesRecords() {
+    assertEquals(List.of(List.of("a"), List.of("b")), Csv.parse("a\rb"));
+    assertEquals(List.of(List.of("a", "b"), List.of("c", "d")), Csv.parse("a,b\rc,d"));
+    assertEquals(List.of(List.of("a"), List.of("b")), Csv.parse("\"a\"\rb"));
+  }
+
+  @Test
+  void loneCarriageReturnAtEndEndsLastRecord() {
+    assertEquals(List.of(List.of("a")), Csv.parse("a\r"));
+    assertEquals(List.of(List.of("")), Csv.parse("\r"));
+    assertEquals(List.of(List.of("a")), Csv.parse("\"a\"\r"));
+  }
+
+  @Test
+  void mixedLineBreaksAreEachOneBreak() {
+    assertEquals(List.of(List.of(""), List.of("")), Csv.parse("\r\r"));
+    assertEquals(List.of(List.of("a"), List.of(""), List.of("b")), Csv.parse("a\n\rb"));
+    assertEquals(List.of(List.of("a"), List.of(""), List.of("b")), Csv.parse("a\r\r\nb"));
+    assertEquals(List.of(List.of("a"), List.of("b")), Csv.parse("a\r\nb"));
+    assertEquals(List.of(List.of("a", ""), List.of("b")), Csv.parse("a,\rb"));
+  }
+
+  @Test
+  void carriageReturnInsideQuotedFieldIsLiteral() {
+    assertEquals(List.of(List.of("a\rb"), List.of("c")), Csv.parse("\"a\rb\"\rc"));
   }
 
   @Test

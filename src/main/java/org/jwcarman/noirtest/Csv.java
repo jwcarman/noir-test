@@ -8,7 +8,8 @@ import java.util.Objects;
  * Reads and writes comma-separated values.
  *
  * <p><b>Records and line breaks.</b> CSV text is a sequence of records separated by line breaks. A
- * line break is {@code "\r\n"} or {@code "\n"}. A line break at the very end of the text ends the
+ * line break is {@code "\r\n"}, {@code "\n"} or a {@code '\r'} that is not followed by {@code
+ * '\n'}; so {@code "\r\n"} is a single line break. A line break at the very end of the text ends the
  * last record and does not start another one. An empty text has no records. A line with no
  * characters between two line breaks, or before the first one, is a record with a single empty
  * field.
@@ -28,8 +29,7 @@ import java.util.Objects;
  *
  * <p><b>Errors.</b> {@link #parse} throws {@link IllegalArgumentException} for a {@code '"'} inside
  * an unquoted field, a quoted field with no closing quote, any character other than a comma or a
- * line break after a closing quote, and a {@code '\r'} outside a quoted field that is not followed
- * by {@code '\n'}.
+ * line break after a closing quote.
  *
  * <p><b>Writing.</b> {@link #format} writes each record as its fields joined by commas, followed by
  * {@code "\r\n"}. A field is written quoted, with each {@code '"'} doubled, exactly when it
@@ -43,10 +43,16 @@ public final class Csv {
   /**
    * Parses {@code text} into records, each a list of its fields in order.
    *
+   * <p>The rules are those described on this class, with one change: a line break is {@code
+   * "\r\n"}, {@code "\n"} or a {@code '\r'} that is not followed by {@code '\n'}. So {@code "\r\n"}
+   * is still one line break, and a lone {@code '\r'} outside a quoted field is a line break rather
+   * than an error. Inside a quoted field, {@code '\r'} is still taken literally. The class
+   * documentation is updated to match.
+   *
    * @param text the CSV text
    * @return the records; the outer and inner lists are unmodifiable
    * @throws NullPointerException if {@code text} is {@code null}
-   * @throws IllegalArgumentException if {@code text} is not valid CSV as described on this class
+   * @throws IllegalArgumentException if {@code text} is not valid CSV
    */
   public static List<List<String>> parse(String text) {
     Objects.requireNonNull(text, "text");
@@ -186,8 +192,11 @@ public final class Csv {
       char c = text.charAt(pos);
       if (c == '\n') {
         pos++;
-      } else if (c == '\r' && pos + 1 < length && text.charAt(pos + 1) == '\n') {
-        pos += 2;
+      } else if (c == '\r') {
+        pos++;
+        if (pos < length && text.charAt(pos) == '\n') {
+          pos++;
+        }
       } else {
         throw error("Unexpected character '" + c + "'");
       }
