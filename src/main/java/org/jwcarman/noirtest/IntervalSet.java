@@ -81,6 +81,18 @@ public final class IntervalSet {
   }
 
   /**
+   * Returns whether any value in {@code [start, end)} is in this set. An empty range ({@code start
+   * == end}) overlaps nothing.
+   *
+   * @throws IllegalArgumentException if {@code start > end}
+   */
+  public boolean overlaps(int start, int end) {
+    checkRange(start, end);
+    Map.Entry<Integer, Integer> lower = ranges.lowerEntry(end);
+    return start < end && lower != null && lower.getValue() > start;
+  }
+
+  /**
    * Returns the intervals of this set, sorted by start, disjoint and non-adjacent. The list is an
    * unmodifiable snapshot: later changes to the set do not change it.
    */
