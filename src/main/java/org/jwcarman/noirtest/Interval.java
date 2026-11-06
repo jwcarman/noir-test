@@ -1,5 +1,8 @@
 package org.jwcarman.noirtest;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
  * A non-empty half-open range of {@code int} values: every {@code x} with {@code start <= x < end}.
  *
@@ -33,5 +36,29 @@ public record Interval(int start, int end) {
   /** Returns whether {@code start <= value < end}. */
   public boolean contains(int value) {
     return start <= value && value < end;
+  }
+
+  /**
+   * Returns whether this interval and {@code other} share at least one value. Adjacent intervals,
+   * such as {@code [1, 5)} and {@code [5, 8)}, share none.
+   *
+   * @throws NullPointerException if {@code other} is {@code null}
+   */
+  public boolean overlaps(Interval other) {
+    Objects.requireNonNull(other, "other");
+    return start < other.end && other.start < end;
+  }
+
+  /**
+   * Returns the values this interval and {@code other} share, as an interval, or empty if they
+   * share none.
+   *
+   * @throws NullPointerException if {@code other} is {@code null}
+   */
+  public Optional<Interval> intersection(Interval other) {
+    if (!overlaps(other)) {
+      return Optional.empty();
+    }
+    return Optional.of(new Interval(Math.max(start, other.start), Math.min(end, other.end)));
   }
 }
