@@ -130,6 +130,14 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
   }
 
   /**
+   * Returns whether this is a stable release: the major version is at least 1 and there are no
+   * pre-release identifiers. Build metadata does not matter.
+   */
+  public boolean isStable() {
+    return major >= 1 && preRelease.isEmpty();
+  }
+
+  /**
    * Compares by SemVer precedence, as described on this class.
    *
    * @throws NullPointerException if {@code other} is {@code null}
