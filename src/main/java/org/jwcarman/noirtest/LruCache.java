@@ -38,7 +38,7 @@ import java.util.function.BiConsumer;
  */
 public final class LruCache<K, V> {
 
-  private final int capacity;
+  private int capacity;
   private final BiConsumer<? super K, ? super V> evictionListener;
   private final LinkedHashMap<K, V> entries;
   private long hits;
@@ -90,14 +90,49 @@ public final class LruCache<K, V> {
     if (entries.containsKey(key) || entries.size() < capacity) {
       return entries.put(key, value);
     }
+    Map.Entry<K, V> evicted = removeEldest();
+    entries.put(key, value);
+    evictionListener.accept(evicted.getKey(), evicted.getValue());
+    return null;
+  }
+
+  /**
+   * Changes the capacity to {@code newCapacity}. While {@link #size()} is greater than {@code
+   * newCapacity}, the least recently used entry is evicted: removed, then passed to the eviction
+   * listener, exactly as an eviction by {@link #put}, oldest first. The recency order of the
+   * remaining entries does not change. Later {@link #put} calls use the new capacity. If the
+   * listener throws, the exception propagates; the entries evicted so far stay evicted, the capacity
+   * is already {@code newCapacity}, and the remaining excess entries stay in the cache.
+   *
+   * @param newCapacity the new maximum number of entries, at least 1
+   * @throws IllegalArgumentException if {@code newCapacity} is less than 1; the cache is unchanged
+   */
+  public void resize(int newCapacity) {
+    if (newCapacity < 1) {
+      throw new IllegalArgumentException("capacity must be at least 1, was " + newCapacity);
+    }
+    this.capacity = newCapacity;
+    while (entries.size() > capacity) {
+      Map.Entry<K, V> evicted = removeEldest();
+      evictionListener.accept(evicted.getKey(), evicted.getValue());
+    }
+  }
+
+  /**
+   * Returns the current capacity.
+   *
+   * @return the maximum number of entries, at least 1
+   */
+  public int capacity() {
+    return capacity;
+  }
+
+  private Map.Entry<K, V> removeEldest() {
     Iterator<Map.Entry<K, V>> it = entries.entrySet().iterator();
     Map.Entry<K, V> eldest = it.next();
-    K evictedKey = eldest.getKey();
-    V evictedValue = eldest.getValue();
+    Map.Entry<K, V> copy = Map.entry(eldest.getKey(), eldest.getValue());
     it.remove();
-    entries.put(key, value);
-    evictionListener.accept(evictedKey, evictedValue);
-    return null;
+    return copy;
   }
 
   /**
