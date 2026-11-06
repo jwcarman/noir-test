@@ -21,16 +21,41 @@ class RomanNumeralsTest {
     "80, LXXX", "90, XC", "100, C", "200, CC", "300, CCC", "400, CD", "500, D", "600, DC",
     "700, DCC", "800, DCCC", "900, CM", "1000, M", "2000, MM", "3000, MMM", "1994, MCMXCIV",
     "2024, MMXXIV", "3999, MMMCMXCIX", "3888, MMMDCCCLXXXVIII", "1001, MI", "1010, MX",
-    "1100, MC", "49, XLIX", "99, XCIX", "444, CDXLIV"
+    "1100, MC", "49, XLIX", "99, XCIX", "444, CDXLIV", "4000, MMMM", "4999, MMMMCMXCIX",
+    "4001, MMMMI", "4444, MMMMCDXLIV"
   })
   void toRomanProducesCanonicalNumerals(int value, String expected) {
     assertEquals(expected, RomanNumerals.toRoman(value));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {0, -1, 4000, 4001, Integer.MIN_VALUE, Integer.MAX_VALUE})
+  @ValueSource(ints = {0, -1, 5000, 5001, Integer.MIN_VALUE, Integer.MAX_VALUE})
   void toRomanRejectsOutOfRange(int value) {
     assertThrows(IllegalArgumentException.class, () -> RomanNumerals.toRoman(value));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0, 'Value out of range 1..4999: 0'", "5000, 'Value out of range 1..4999: 5000'"})
+  void toRomanRejectionMessageNamesTheRange(int value, String expected) {
+    var e = assertThrows(IllegalArgumentException.class, () -> RomanNumerals.toRoman(value));
+    assertEquals(expected, e.getMessage());
+  }
+
+  @Test
+  void toRomanProducesDistinctNumeralsUpTo4999() {
+    Set<String> seen = new HashSet<>();
+    for (int n = 1; n <= 4999; n++) {
+      assertTrue(seen.add(RomanNumerals.toRoman(n)));
+    }
+    assertEquals("MMMMCMXCIX", RomanNumerals.toRoman(4999));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {4000, 4001, 4999})
+  void fromRomanStillRejectsNumeralsAbove3999(int value) {
+    String numeral = RomanNumerals.toRoman(value);
+    var e = assertThrows(IllegalArgumentException.class, () -> RomanNumerals.fromRoman(numeral));
+    assertEquals("Not a canonical Roman numeral: \"" + numeral + "\"", e.getMessage());
   }
 
   @ParameterizedTest
