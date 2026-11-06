@@ -13,14 +13,9 @@ public final class Clamp {
    */
   public static int clamp(int value, int min, int max) {
     if (min > max) {
-      throw new IllegalArgumentException("min (" + min + ") must not be greater than max (" + max + ")");
+      throw new IllegalArgumentException(
+          "min (" + min + ") must not be greater than max (" + max + ")");
     }
-    if (value < min) {
-      return min;
-    }
-    if (value > max) {
-      return max;
-    }
-    return value;
+    return Math.max(min, Math.min(value, max));
   }
 }
