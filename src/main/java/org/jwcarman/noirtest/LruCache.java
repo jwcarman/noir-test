@@ -41,6 +41,8 @@ public final class LruCache<K, V> {
   private final int capacity;
   private final BiConsumer<? super K, ? super V> evictionListener;
   private final LinkedHashMap<K, V> entries;
+  private long hits;
+  private long misses;
 
   /**
    * Creates an empty cache that holds at most {@code capacity} entries and has no eviction
@@ -102,12 +104,48 @@ public final class LruCache<K, V> {
    * Returns the value stored under {@code key}, and if it is present makes {@code key} the most
    * recently used key.
    *
+   * <p>A call that returns a value adds one to {@link #hitCount()}. A call for a key that is not
+   * present adds one to {@link #missCount()}. A call that throws {@link NullPointerException}
+   * changes neither count.
+   *
    * @param key the key
    * @return the value stored under {@code key}, or {@code null} if {@code key} is not present
    * @throws NullPointerException if {@code key} is {@code null}
    */
   public V get(K key) {
-    return entries.get(Objects.requireNonNull(key, "key must not be null"));
+    V value = entries.get(Objects.requireNonNull(key, "key must not be null"));
+    if (value == null) {
+      misses++;
+    } else {
+      hits++;
+    }
+    return value;
+  }
+
+  /**
+   * Returns how many calls to {@link #get} found their key since the cache was created or {@link
+   * #resetStats()} was last called.
+   *
+   * @return the hit count, at least 0
+   */
+  public long hitCount() {
+    return hits;
+  }
+
+  /**
+   * Returns how many calls to {@link #get} did not find their key since the cache was created or
+   * {@link #resetStats()} was last called.
+   *
+   * @return the miss count, at least 0
+   */
+  public long missCount() {
+    return misses;
+  }
+
+  /** Sets {@link #hitCount()} and {@link #missCount()} to 0, without changing the entries. */
+  public void resetStats() {
+    hits = 0;
+    misses = 0;
   }
 
   /**
