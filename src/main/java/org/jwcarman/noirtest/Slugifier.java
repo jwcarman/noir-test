@@ -57,6 +57,35 @@ public final class Slugifier {
     return EDGE_HYPHENS.matcher(hyphenated).replaceAll("");
   }
 
+  /**
+   * Returns the slug for {@code title}, at most {@code maxLength} characters long.
+   *
+   * <p>Let {@code full} be {@code slugify(title)}. If {@code full} has at most {@code maxLength}
+   * characters, it is returned unchanged. Otherwise the result is the longest prefix of {@code
+   * full} that has at most {@code maxLength} characters and ends where a word of {@code full}
+   * ends, that is, just before a hyphen of {@code full}. If the first word of {@code full} alone is
+   * longer than {@code maxLength}, the result is the first {@code maxLength} characters of {@code
+   * full}. The result never ends with a hyphen.
+   *
+   * @param title the title to convert
+   * @param maxLength the most characters the result may have, at least 1
+   * @return the shortened slug, possibly empty, never {@code null}
+   * @throws NullPointerException if {@code title} is {@code null}
+   * @throws IllegalArgumentException if {@code maxLength} is less than 1
+   */
+  public static String slugify(String title, int maxLength) {
+    Objects.requireNonNull(title, "title");
+    if (maxLength < 1) {
+      throw new IllegalArgumentException("maxLength must be at least 1: " + maxLength);
+    }
+    String full = slugify(title);
+    if (full.length() <= maxLength) {
+      return full;
+    }
+    int boundary = full.lastIndexOf('-', maxLength);
+    return full.substring(0, boundary < 0 ? maxLength : boundary);
+  }
+
   private static String lowercaseAscii(String text) {
     char[] chars = text.toCharArray();
     for (int i = 0; i < chars.length; i++) {
