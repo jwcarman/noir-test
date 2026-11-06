@@ -1,5 +1,6 @@
 package org.jwcarman.noirtest;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -46,24 +47,22 @@ public final class RomanNumerals {
   }
 
   /**
-   * Returns the integer represented by the canonical uppercase Roman numeral {@code numeral}.
+   * Returns the value of {@code numeral}, ignoring letter case: the letters {@code i}, {@code v},
+   * {@code x}, {@code l}, {@code c}, {@code d} and {@code m} are read as their uppercase forms, in
+   * any mix of cases. The numeral, uppercased, must be exactly the canonical numeral of a value from
+   * 1 to 3999. Any other character, including whitespace, still makes it invalid.
    *
-   * <p>{@code numeral} is accepted only if it is exactly equal to {@code toRoman(n)} for some
-   * {@code n} from 1 to 3999, in which case {@code n} is returned. The empty string, strings
-   * containing whitespace anywhere, lowercase or mixed-case strings, strings with characters other
-   * than I, V, X, L, C, D and M, and non-canonical forms such as {@code "IIII"} or {@code "IC"} are
-   * rejected.
-   *
-   * @param numeral the canonical Roman numeral to parse
-   * @return the integer, from 1 to 3999 inclusive, that {@code numeral} represents
+   * @param numeral the numeral to read
+   * @return its value, from 1 to 3999
    * @throws NullPointerException if {@code numeral} is {@code null}
-   * @throws IllegalArgumentException if {@code numeral} is not exactly the canonical numeral of an
-   *     integer from 1 to 3999
+   * @throws IllegalArgumentException if {@code numeral}, uppercased, is not exactly the canonical
+   *     numeral of a value from 1 to 3999; the message is {@code Not a canonical Roman numeral:
+   *     "<numeral>"} with the numeral as given
    */
   public static int fromRoman(String numeral) {
     Objects.requireNonNull(numeral, "numeral");
     int value = rawValue(numeral);
-    if (value < MIN || value > MAX || !toRoman(value).equals(numeral)) {
+    if (value < MIN || value > MAX || !toRoman(value).equals(numeral.toUpperCase(Locale.ROOT))) {
       throw new IllegalArgumentException("Not a canonical Roman numeral: \"" + numeral + "\"");
     }
     return value;
@@ -82,13 +81,13 @@ public final class RomanNumerals {
 
   private static int letterValue(String numeral, char c) {
     return switch (c) {
-      case 'I' -> 1;
-      case 'V' -> 5;
-      case 'X' -> 10;
-      case 'L' -> 50;
-      case 'C' -> 100;
-      case 'D' -> 500;
-      case 'M' -> 1000;
+      case 'I', 'i' -> 1;
+      case 'V', 'v' -> 5;
+      case 'X', 'x' -> 10;
+      case 'L', 'l' -> 50;
+      case 'C', 'c' -> 100;
+      case 'D', 'd' -> 500;
+      case 'M', 'm' -> 1000;
       default ->
           throw new IllegalArgumentException(
               "Not a canonical Roman numeral: \"" + numeral + "\"");
