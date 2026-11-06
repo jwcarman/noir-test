@@ -36,11 +36,12 @@ public class Counter {
   /**
    * Subtracts one from the count.
    *
-   * @throws IllegalStateException if the count is already zero
+   * @throws IllegalStateException with the message {@code cannot decrement below zero} if the
+   *     count is already zero
    */
   public void decrement() {
     if (count == 0) {
-      throw new IllegalStateException("count is already zero");
+      throw new IllegalStateException("cannot decrement below zero");
     }
     count--;
   }
