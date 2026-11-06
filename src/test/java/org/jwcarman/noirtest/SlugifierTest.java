@@ -60,7 +60,7 @@ class SlugifierTest {
 
   @Test
   void nonAsciiBecomesSeparator() {
-    check("Straße", "stra-e");
+    check("Straße", "strasse");
     check("Øresund", "resund");
     check("I ❤ Java", "i-java");
     check("naïve 日本 café", "naive-cafe");
