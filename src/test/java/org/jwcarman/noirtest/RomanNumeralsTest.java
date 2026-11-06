@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,7 +55,7 @@ class RomanNumeralsTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "", " ", " XIV", "XIV ", "X IV", "\tI", "I\n", "xiv", "Xiv", "i", "m", "ABC", "12", "X1",
+        "", " ", " XIV", "XIV ", "X IV", "\tI", "I\n", "ABC", "12", "X1",
         "IIII", "VV", "IC", "IL", "XM", "VX", "MMMM", "IIV", "CMM", "DD", "LL", "XXXX", "CCCC",
         "IXI", "XCX", "CMC", "IVI", "VIV", "MMMMCMXCIX", "IM", "ID", "XD", "LC", "DM", "IIX"
       })
@@ -63,10 +64,50 @@ class RomanNumeralsTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"", "MMMM", "IIII", "xiv"})
+  @ValueSource(strings = {"", "MMMM", "IIII"})
   void fromRomanRejectionMessageNamesTheNumeral(String numeral) {
     var e = assertThrows(IllegalArgumentException.class, () -> RomanNumerals.fromRoman(numeral));
     assertEquals("Not a canonical Roman numeral: \"" + numeral + "\"", e.getMessage());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "xiv, 14", "Xiv, 14", "xIV, 14", "mcmxciv, 1994", "i, 1", "m, 1000", "mmmcmxcix, 3999",
+    "v, 5", "x, 10", "l, 50", "c, 100", "d, 500", "MmXxIv, 2024", "mmmdccclxxxviii, 3888",
+    "cdxliv, 444"
+  })
+  void fromRomanIgnoresLetterCase(String numeral, int expected) {
+    assertEquals(expected, RomanNumerals.fromRoman(numeral));
+  }
+
+  @Test
+  void fromRomanParsesEveryValueInLowercase() {
+    for (int n = 1; n <= 3999; n++) {
+      assertEquals(n, RomanNumerals.fromRoman(RomanNumerals.toRoman(n).toLowerCase(Locale.ROOT)));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "iiii", "mmmm", "ic", "xiv ", " xiv", "x iv", "vv", "iiv", "mmmmcmxcix", "Iiii", "iC",
+        "\u0131", "x\u0131v", "\u2170", "abc", "xiv\n"
+      })
+  void fromRomanRejectsNonCanonicalNumeralsInAnyCase(String numeral) {
+    var e = assertThrows(IllegalArgumentException.class, () -> RomanNumerals.fromRoman(numeral));
+    assertEquals("Not a canonical Roman numeral: \"" + numeral + "\"", e.getMessage());
+  }
+
+  @Test
+  void fromRomanIgnoresDefaultLocale() {
+    Locale saved = Locale.getDefault();
+    try {
+      Locale.setDefault(Locale.forLanguageTag("tr"));
+      assertEquals(14, RomanNumerals.fromRoman("xiv"));
+      assertEquals(1999, RomanNumerals.fromRoman("mcmxcix"));
+    } finally {
+      Locale.setDefault(saved);
+    }
   }
 
   @Test
