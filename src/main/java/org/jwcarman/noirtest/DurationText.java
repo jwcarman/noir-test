@@ -8,8 +8,9 @@ import java.util.Objects;
  *
  * <p><b>Text format.</b> The text is one or more components with nothing else around or between
  * them: no whitespace, sign or decimal point. A component is one or more ASCII digits followed by a
- * unit. The units, from largest to smallest, are {@code d} (24 hours), {@code h} (hours), {@code
- * m} (minutes), {@code s} (seconds) and {@code ms} (milliseconds). Units are lowercase, each unit
+ * unit. The units, from largest to smallest, are {@code w} (7 days), {@code d} (24 hours), {@code
+ * h} (hours), {@code m} (minutes), {@code s} (seconds) and {@code ms} (milliseconds). Units are
+ * lowercase, each unit
  * appears at most once, and units appear in strictly decreasing size. A component's number may be
  * larger than one of the next unit up (for example {@code "90m"}) and may have leading zeros (for
  * example {@code "007s"}). The text {@code "1ms"} is one millisecond, never one minute followed by
@@ -18,22 +19,26 @@ import java.util.Objects;
  * <p><b>Canonical text.</b> {@link #format} writes the components from the largest unit to the
  * smallest, each with the largest whole count that fits after the larger units are taken out,
  * leaves out every zero component, writes no leading zeros, and writes {@code "0s"} for a zero
- * duration.
+ * duration. It never writes weeks: the largest unit it writes is {@code d}.
  */
 public final class DurationText {
 
   /** Unit suffixes, largest first; the index is the unit's rank. */
-  private static final String[] UNITS = {"d", "h", "m", "s", "ms"};
+  private static final String[] UNITS = {"w", "d", "h", "m", "s", "ms"};
 
-  /** Seconds per unit for d, h, m, s (milliseconds handled separately). */
-  private static final long[] SECONDS = {86_400L, 3_600L, 60L, 1L};
+  /** Seconds per unit for w, d, h, m, s (milliseconds handled separately). */
+  private static final long[] SECONDS = {604_800L, 86_400L, 3_600L, 60L, 1L};
 
-  private static final int MILLIS = 4;
+  private static final int MILLIS = 5;
+
+  /** Rank of the largest unit {@link #format} writes (days; weeks are never written). */
+  private static final int FORMAT_FIRST = 1;
 
   private DurationText() {}
 
   /**
-   * Parses {@code text} in the text format described on this class.
+   * Parses {@code text} in the text format described on this class, including the week unit
+   * {@code w} (7 days).
    *
    * @param text the text to parse
    * @return the duration the text denotes, the sum of its components
@@ -88,7 +93,7 @@ public final class DurationText {
     }
     StringBuilder sb = new StringBuilder();
     long remaining = duration.getSeconds();
-    for (int rank = 0; rank < SECONDS.length; rank++) {
+    for (int rank = FORMAT_FIRST; rank < SECONDS.length; rank++) {
       append(sb, remaining / SECONDS[rank], rank);
       remaining %= SECONDS[rank];
     }
@@ -122,7 +127,7 @@ public final class DurationText {
     if (c == 'm' && pos + 1 < text.length() && text.charAt(pos + 1) == 's') {
       return MILLIS;
     }
-    int rank = "dhms".indexOf(c);
+    int rank = "wdhms".indexOf(c);
     if (rank < 0) {
       throw invalid(text, "unknown unit at index " + pos);
     }
