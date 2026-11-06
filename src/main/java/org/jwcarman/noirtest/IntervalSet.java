@@ -102,6 +102,35 @@ public final class IntervalSet {
     return List.copyOf(result);
   }
 
+  /**
+   * Returns the values of {@code [start, end)} that are not in this set, as sorted, disjoint,
+   * non-adjacent intervals. The list is unmodifiable and empty when the whole range is in the set
+   * or the range is empty ({@code start == end}). The set is unchanged.
+   *
+   * @throws IllegalArgumentException if {@code start > end}
+   */
+  public List<Interval> gaps(int start, int end) {
+    checkRange(start, end);
+    List<Interval> result = new ArrayList<>();
+    int cursor = start;
+    Map.Entry<Integer, Integer> lower = ranges.lowerEntry(start);
+    if (lower != null) {
+      cursor = Math.max(cursor, lower.getValue());
+    }
+    for (Map.Entry<Integer, Integer> entry : ranges.subMap(start, true, end, false).entrySet()) {
+      addGap(result, cursor, entry.getKey());
+      cursor = entry.getValue();
+    }
+    addGap(result, cursor, end);
+    return List.copyOf(result);
+  }
+
+  private static void addGap(List<Interval> result, int from, int to) {
+    if (from < to) {
+      result.add(new Interval(from, to));
+    }
+  }
+
   /** Returns how many values are in the set, computed without {@code int} overflow. */
   public long totalLength() {
     long total = 0;
