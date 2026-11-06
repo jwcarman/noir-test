@@ -44,7 +44,7 @@ class Base62Test {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "", "a-b", "-", " ", "01", "00", "0z", "AzL8n0Y58m8", "AzL8n0Y58mz", "B00000000000",
+        "", "a-b", "-", " ", "AzL8n0Y58m8", "AzL8n0Y58mz", "B00000000000",
         "zzzzzzzzzzz", "100000000000", "é"
       })
   void decodeRejectsInvalid(String text) {

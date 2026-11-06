@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Base 62 with the alphabet {@code 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz}
- * (digit value = index in the alphabet), most significant digit first, no padding.
+ * (digit value = index in the alphabet), most significant digit first.
  */
 public final class Base62 {
 
@@ -33,20 +33,35 @@ public final class Base62 {
   }
 
   /**
-   * Decodes {@code text}, the inverse of {@link #encode}.
+   * Encodes {@code value} like {@link #encode(long)}, then left-pads it with {@code '0'} to at least
+   * {@code minLength} characters.
+   *
+   * @throws IllegalArgumentException if {@code value} is negative or {@code minLength} is less than 1
+   */
+  public static String encode(long value, int minLength) {
+    if (minLength < 1) {
+      throw new IllegalArgumentException("minLength must be at least 1: " + minLength);
+    }
+    String encoded = encode(value);
+    StringBuilder sb = new StringBuilder(Math.max(minLength, encoded.length()));
+    for (int i = encoded.length(); i < minLength; i++) {
+      sb.append('0');
+    }
+    return sb.append(encoded).toString();
+  }
+
+  /**
+   * Decodes {@code text}, the inverse of both {@code encode} methods: leading {@code '0'} characters
+   * are now allowed and ignored.
    *
    * @throws NullPointerException if {@code text} is {@code null}
-   * @throws IllegalArgumentException if {@code text} is empty, has a character outside the
-   *     alphabet, has a leading {@code '0'} (other than {@code "0"} itself), or exceeds {@link
-   *     Long#MAX_VALUE}
+   * @throws IllegalArgumentException if {@code text} is empty, has a character outside the alphabet,
+   *     or exceeds {@link Long#MAX_VALUE}
    */
   public static long decode(String text) {
     Objects.requireNonNull(text, "text");
     if (text.isEmpty()) {
       throw new IllegalArgumentException("text must not be empty");
-    }
-    if (text.length() > 1 && text.charAt(0) == '0') {
-      throw new IllegalArgumentException("leading zero: " + text);
     }
     long result = 0;
     for (int i = 0; i < text.length(); i++) {
