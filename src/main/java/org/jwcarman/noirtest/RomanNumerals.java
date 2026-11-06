@@ -4,20 +4,21 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Converts between integers in the range 1 to 3999 inclusive and canonical uppercase Roman
- * numerals.
+ * Converts between integers and canonical uppercase Roman numerals. {@link #toRoman(int)} accepts
+ * 1 to 4999 inclusive; {@link #fromRoman(String)} accepts the numerals of 1 to 3999 inclusive.
  *
  * <p>Canonical form writes the thousands, hundreds, tens and ones digits in that order. Ones digits
  * 1-9 are I, II, III, IV, V, VI, VII, VIII, IX; tens use X, L and C in the same pattern; hundreds
- * use C, D and M; thousands are M, MM and MMM; a zero digit contributes nothing. The only
+ * use C, D and M; thousands are M, MM, MMM and MMMM; a zero digit contributes nothing. The only
  * subtractive pairs are IV, IX, XL, XC, CD and CM.
  */
 public final class RomanNumerals {
 
   private static final int MIN = 1;
   private static final int MAX = 3999;
+  private static final int MAX_TO_ROMAN = 4999;
 
-  private static final String[] THOUSANDS = {"", "M", "MM", "MMM"};
+  private static final String[] THOUSANDS = {"", "M", "MM", "MMM", "MMMM"};
   private static final String[] HUNDREDS = {
     "", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"
   };
@@ -27,18 +28,19 @@ public final class RomanNumerals {
   private RomanNumerals() {}
 
   /**
-   * Returns the canonical uppercase Roman numeral for {@code value}.
+   * Returns the canonical uppercase Roman numeral for {@code value}, writing each thousand as
+   * {@code M} (so 4000 is {@code "MMMM"}).
    *
-   * <p>For example, {@code toRoman(14)} returns {@code "XIV"} and {@code toRoman(1994)} returns
-   * {@code "MCMXCIV"}.
+   * <p>For example, {@code toRoman(14)} returns {@code "XIV"} and {@code toRoman(4999)} returns
+   * {@code "MMMMCMXCIX"}.
    *
-   * @param value the integer to convert, from 1 to 3999 inclusive
+   * @param value the integer to convert, from 1 to 4999 inclusive
    * @return the canonical uppercase Roman numeral for {@code value}
-   * @throws IllegalArgumentException if {@code value} is less than 1 or greater than 3999
+   * @throws IllegalArgumentException if {@code value} is less than 1 or greater than 4999
    */
   public static String toRoman(int value) {
-    if (value < MIN || value > MAX) {
-      throw new IllegalArgumentException("Value out of range 1..3999: " + value);
+    if (value < MIN || value > MAX_TO_ROMAN) {
+      throw new IllegalArgumentException("Value out of range 1..4999: " + value);
     }
     return THOUSANDS[value / 1000]
         + HUNDREDS[value / 100 % 10]
