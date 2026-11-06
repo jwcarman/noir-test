@@ -173,6 +173,38 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
     return Integer.signum(a.compareTo(b));
   }
 
+  /**
+   * Returns the next version of the given kind. {@code MAJOR} gives {@code (major + 1).0.0},
+   * {@code MINOR} gives {@code major.(minor + 1).0} and {@code PATCH} gives {@code
+   * major.minor.(patch + 1)}. The result has no pre-release identifiers and no build metadata, and
+   * its {@link #toString()} is {@code "MAJOR.MINOR.PATCH"}. This version is unchanged.
+   *
+   * @param kind which part to increase
+   * @return the next version
+   * @throws NullPointerException if {@code kind} is {@code null}
+   * @throws IllegalStateException if the part to increase is already {@link Integer#MAX_VALUE}
+   */
+  public SemanticVersion bump(VersionBump kind) {
+    Objects.requireNonNull(kind, "kind");
+    return switch (kind) {
+      case MAJOR -> of(increment(major, "major"), 0, 0);
+      case MINOR -> of(major, increment(minor, "minor"), 0);
+      case PATCH -> of(major, minor, increment(patch, "patch"));
+    };
+  }
+
+  private static int increment(int value, String part) {
+    if (value == Integer.MAX_VALUE) {
+      throw new IllegalStateException("Cannot increase " + part + " version beyond " + value);
+    }
+    return value + 1;
+  }
+
+  private static SemanticVersion of(int major, int minor, int patch) {
+    return new SemanticVersion(
+        major, minor, patch, List.of(), List.of(), major + "." + minor + "." + patch);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
